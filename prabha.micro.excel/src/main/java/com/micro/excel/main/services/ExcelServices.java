@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.micro.excel.main.been.CustomerData;
+import com.micro.excel.main.been.PerficientData;
+import com.micro.excel.main.repository.FileInventoryRepository;
 import com.micro.excel.main.utils.FileclsUtil;
 
 @Component
@@ -27,11 +29,19 @@ public class ExcelServices {
 	@Autowired
 	FileclsUtil fileclsUtil;
 	
+	@Autowired
+	FileInventoryRepository repository;
+	
 	public void writeByte(CustomerData cusData)    { 			
 		try {
+			PerficientData perficientData = new PerficientData();
 			String filePath = fileclsUtil.createFolder(cusData.getDateTime())+"/"+cusData.getFileName();
 			fileclsUtil.fileWriter( cusData.getBytes(),filePath );
-			excelExtractService(filePath,cusData.getFileType());
+			StringBuilder builder = excelExtractService(filePath,cusData.getFileType());
+			perficientData.setData(builder.toString());
+			perficientData.setType("Excel");
+			perficientData.setLastupdate(cusData.getDateTime());
+			repository.save(perficientData);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -42,30 +52,36 @@ public class ExcelServices {
 		
     } 
 	
-	public void excelExtractService(String filePath,String type) throws FileNotFoundException, IOException {
-		
-		Workbook workbook = getWorkBook(filePath, type);
-		int totalSheet = workbook.getNumberOfSheets();
-		System.out.println("totalSheet  "+totalSheet);
-		for(int currentSheet=0; currentSheet<totalSheet; currentSheet++ ) {
-			 Sheet sheet = workbook.getSheetAt(currentSheet);
-			 int frow = sheet.getFirstRowNum();
-			 int lrow = sheet.getLastRowNum();
-			 for(int rowno =frow; rowno<lrow; rowno++) {	
-				Row row = sheet.getRow(rowno);
-				int fcell = row.getFirstCellNum();
-				int lcell = row.getLastCellNum();				
-				for(int cellNo = fcell; cellNo < lcell; cellNo ++ ) {
-					Cell cell = row.getCell(cellNo);
-					String data = getValues(cell).toString();
+	public StringBuilder excelExtractService(String filePath,String type) throws FileNotFoundException, IOException {
+		StringBuilder builder = new StringBuilder();
+		try {
 
-					System.out.print(data +"  -  ");
-				}
-				
-				System.out.println();
-			 }
-			 
-		}
+			Workbook workbook = getWorkBook(filePath, type);
+			int totalSheet = workbook.getNumberOfSheets();
+			System.out.println("totalSheet  "+totalSheet);
+			for(int currentSheet=0; currentSheet<totalSheet; currentSheet++ ) {
+				 Sheet sheet = workbook.getSheetAt(currentSheet);
+				 int frow = sheet.getFirstRowNum();
+				 int lrow = sheet.getLastRowNum();
+				 for(int rowno =frow; rowno<lrow; rowno++) {	
+					Row row = sheet.getRow(rowno);
+					int fcell = row.getFirstCellNum();
+					int lcell = row.getLastCellNum();				
+					for(int cellNo = fcell; cellNo < lcell; cellNo ++ ) {
+						Cell cell = row.getCell(cellNo);
+						String data = getValues(cell).toString();
+						builder.append(data +"-");
+						System.out.print(data +"  -  ");
+					}
+					builder.append("\n");
+					System.out.println();
+				 }
+				 
+			}
+
+		}catch(Exception e) {
+			e.printStackTrace();
+		}		return builder;
        
 	}
 

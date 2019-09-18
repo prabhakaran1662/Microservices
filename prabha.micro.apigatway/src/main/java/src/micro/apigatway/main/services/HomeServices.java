@@ -23,29 +23,21 @@ public class HomeServices implements HomeInterface {
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	
 	@Override	
-	public String getFileUpload(MultipartFile file) {
+	public void getFileUpload(MultipartFile file) throws IOException {
 		// TODO Auto-generated method stub
-		System.out.println("file type ==>> "+file.getContentType());
 		LocalDateTime now = LocalDateTime.now();
-        System.out.println(dtf.format(now).toString());
 		CustomerData cusData = new CustomerData();		
 		cusData.setDateTime(dtf.format(now));
 		cusData.setFileName(file.getOriginalFilename());
 		cusData.setFileType(file.getContentType());
-	//	cusData.setUploadFile(file);
-		try {
-			cusData.setBytes(file.getBytes());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		cusData.setBytes(file.getBytes());
+
 		if(file.getContentType().equalsIgnoreCase("application/pdf")) {
 			System.out.println("cusData ==>> "+cusData);
 			producer.pdfProduce(cusData);
 		}else if(file.getContentType().equalsIgnoreCase("application/vnd.ms-excel") || file.getContentType().equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
 			producer.excelProduce(cusData);
 		}
-		return null;
 	}
 
 }

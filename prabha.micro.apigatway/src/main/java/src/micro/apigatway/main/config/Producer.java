@@ -21,11 +21,14 @@ public class Producer {
 	@Value("${excel.rabbitmq.routingkey}")
 	private String ExcelRoutingkey;
 	
+	@Value("${pdf.rabbitmq.queue}")
+	private String pdfQueueName;
 	
 
 	public void pdfProduce(CustomerData cusData) {
 		amqpTemplate.convertAndSend(exchange, pdfRoutingkey, cusData);
-		System.out.println("Send Pdf data ==>> "+cusData);
+		String foo = (String) amqpTemplate.receiveAndConvert(pdfQueueName);
+		System.out.println("Send Pdf data ==>> "+foo);
 	}
 	
 	public void excelProduce(CustomerData cusData) {
